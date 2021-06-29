@@ -3,8 +3,8 @@ use std::ops::Mul;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Complex128 {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Complex128 {

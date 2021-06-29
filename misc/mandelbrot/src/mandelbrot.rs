@@ -16,7 +16,7 @@ pub fn draw_zoom_go() {
     let (xmin, ymin) = (-1.5, -0.);
     let (xmax, ymax) = (xmin + 1e-14, ymin + 1e-14);
 
-    draw("zoomgo", xmin, ymin, xmax, ymax);    
+    draw("zoomgo", xmin, ymin, xmax, ymax);
 }
 
 pub fn draw0() {
@@ -71,27 +71,52 @@ fn gray(z: Complex128) -> Option<Rgb<u8>> {
     None
 }
 
-fn to_rgb(y: f64, u: f64, v: f64) -> [u8; 3] {
-    let r = y + v * 1.13983;
-    let g = y - u * 0.39465 - v * 0.5806;
-    let b = y + 2.03211 * u;
+fn ycbcr_to_rgb(y: u8, cb: u8, cr: u8) -> [u8; 3] {
+    // https://golang.org/src/image/color/ycbcr.go
+    let yy1 = (y as u32) * 0x10101;
+    let cb1 = (cb as u32) - 128;
+    let cr1 = (cr as u32) - 128;
+
+    let mut r = yy1 + 91881 * cr1;
+
+    if r & 0xff000000 == 0 {
+        r >>= 16;
+    } else {
+        // r = !^(r >> 31)
+        r = !(r >> 31);
+    }
+
+    let mut g = yy1 - 22554 * cb1 - 46802 * cr1;
+
+    if g & 0xff000000 == 0 {
+        g >>= 16;
+    } else {
+        g = !(g >> 31);
+    }
+
+    let mut b = yy1 + 116130 * cb1;
+    if b & 0xff000000 == 0 {
+        b >>= 16;
+    } else {
+        b = !(b >> 31);
+    }
 
     return [r as u8, g as u8, b as u8];
 }
 
 fn ycbcr(z: Complex128) -> Option<Rgb<u8>> {
     const ITERATIONS: u8 = 250;
-    const CONTRAST: f64 = 150.;
+    const CONTRAST: u8 = 150;
 
     let mut c = Complex128::new(0., 0.);
     for i in 0..ITERATIONS {
         c = c * c + z;
-        if c.abs() > 2.0 {
-            let rgb = to_rgb(
-                i as f64 * CONTRAST,
-                i as f64 * CONTRAST,
+        if c.x * c.x + c.y * c.y > 4.0 {
+            let rgb = ycbcr_to_rgb(
+                i * CONTRAST,
+                i * CONTRAST,
                 // (((i as f64) * (i as f64) * CONTRAST) as u8) as f64,
-                128.,
+                128,
             );
 
             return Some(Rgb(rgb));
