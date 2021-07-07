@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 
-fn mean<T: std::convert::Into<f64>>(xs: Vec<T>) -> f64 {
+// fn mean<T: Into<f64>>(xs: dyn Iterator<Item=T> + Sized) -> f64 { // can't compile
+fn mean<T: Into<f64>>(xs: Vec<T>) -> f64 {
     let mut current = 0.;
     let n = xs.len() as f64;
 
@@ -59,6 +60,11 @@ mod tests {
         for case in cases {
             assert_eq!(mean(case), 0.);
         }
+
+        // casesにまとめたい
+        assert_eq!(mean(vec![1., 2., -4., 1.0]), 0.0);
+
+        // let v : Vec<Box<dyn Copy>> = vec![Box::new(1), Box::new(2.),];
     }
 
     #[test]
@@ -87,4 +93,22 @@ mod tests {
             assert_eq!(got, want);
         }
     }
+
+    // #[test]
+    // fn test_() {
+    //     use std::ops::{Add, Div};
+    //     fn double<T: Copy + Add<Output = T>>(x: T) -> T {
+    //         x + x
+    //     }
+
+    //     fn plus<T: Copy + Add<Output = T> + From<i32>>(x: T) -> T {
+    //         x + 1.into()
+    //     }
+
+    //     fn half<T: Copy + Div<Output = f64> + From<i32>>(x: T) -> f64 {
+    //         x / 2.into()
+    //     }
+
+    //     assert_eq!(half(3), 1.5);
+    // }
 }
